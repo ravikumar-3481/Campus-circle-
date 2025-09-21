@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show Alumni Network - AlumniConnect</title>
+    <!-- Google Fonts: Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --light: #f8fafc;
+            --dark: #1e293b;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: #f9fafb;
+            color: var(--dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            
+        }
+
+        /* Header Styles */
+        header {
+            background-color: white;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .menu-icon {
+            cursor: pointer;
+            width: 30px;
+            height: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: var(--transition);
+        }
+
+        .menu-icon span {
+            display: block;
+            height: 3px;
+            width: 100%;
+            background-color: var(--dark);
+            border-radius: 3px;
+            transition: var(--transition);
+        }
+
+        .menu-icon.active span:nth-child(1) {
+            transform: translateY(8px) rotate(45deg);
+        }
+
+        .menu-icon.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .menu-icon.active span:nth-child(3) {
+            transform: translateY(-8px) rotate(-45deg);
+        }
+
+        /* Navigation Menu */
+        .nav-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 5;
+            width: 100%;
+            background-color: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 1rem 0;
+            z-index: 99;
+            border-radius: 15px;
+        }
+
+        .nav-menu.active {
+            display: block;
+        }
+
+        .nav-menu ul {
+            list-style: none;
+            text-align: center;
+        }
+
+        .nav-menu li {
+            margin: 1rem 0;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .nav-menu a:hover {
+            color: var(--primary);
+        }
+
+        .nav-menu a i {
+            margin-right: 0.5rem;
+        }
+
+        /* Alumni Section */
+        .alumni {
+            margin: 4rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            font-size: 2rem;
+            color: var(--dark);
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .filter-container {
+            max-width: 400px;
+            margin: 0 auto 2rem;
+            text-align: center;
+        }
+
+        .filter-container label {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .filter-container input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--dark);
+            transition: var(--transition);
+        }
+
+        .filter-container input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 5px rgba(37, 99, 235, 0.3);
+        }
+
+        .alumni-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .alumni-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s forwards;
+            animation-delay: calc(0.2s * var(--index));
+        }
+
+        .alumni-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .alumni-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .alumni-card p {
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .alumni-card a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .alumni-card a:hover {
+            text-decoration: underline;
+        }
+
+        /* Export Button */
+        .export-btn {
+            display: block;
+            width: 200px;
+            margin: 0 auto 2rem;
+            padding: 10px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .alumni-card {
+                padding: 1.5rem;
+            }
+
+            .export-btn {
+                width: 150px;
+            }
+            .nav-menu {
+              width: 40%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">Campus<span class="si" style="color : green;">Circle</span></div>
+                <div class="menu-icon" id="menuIcon">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <nav class="nav-menu" id="navMenu">
+                    <ul>
+                        <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                        <li><a href="add-alumni.html"><i class="fas fa-user-plus"></i> Add Alumni</a></li>
+                        <li><a href="events.html"><i class="fas fa-calendar-alt"></i> Events</a></li>
+                        <li><a href="#"><i class="fas fa-users"></i> Network</a></li>
+                        <li><a href="#"><i class="fas fa-envelope"></i> Contact</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section class="alumni">
+        <div class="container">
+            <h2 class="section-title">Alumni Network</h2>
+            <button class="export-btn" onclick="exportAlumni()">Export to Excel</button>
+            <div class="filter-container">
+                <label for="graduation-year-filter">Filter by Graduation Year</label>
+                <input type="number" id="graduation-year-filter" placeholder="Enter year (e.g., 2020)" min="1900" max="2025">
+            </div>
+            <div class="alumni-grid" id="alumniGrid"></div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <p>© 2023 AlumniConnect. All rights reserved.</p>
+                <p>Stay connected with your alma mater and fellow graduates through our comprehensive alumni network platform.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Menu toggle
+        const menuIcon = document.getElementById('menuIcon');
+        const navMenu = document.getElementById('navMenu');
+
+        menuIcon.addEventListener('click', () => {
+            menuIcon.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+
+        document.querySelectorAll('.nav-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    menuIcon.classList.remove('active');
+                    navMenu.classList.remove('active');
+                }
+            });
+        });
+
+        // Fetch and display alumni with enhanced debugging
+        const alumniGrid = document.getElementById('alumniGrid');
+        let allAlumni = [];  // Store all alumni for filtering
+
+        async function fetchAlumni() {
+            try {
+                console.log('Sending request to server for alumni data at http://127.0.0.1:5000/api/alumni');
+                const response = await fetch('http://127.0.0.1:5000/api/alumni', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                allAlumni = await response.json();
+                console.log('Received alumni data:', allAlumni);
+                renderAlumni(allAlumni);
+            } catch (error) {
+                console.error('Error fetching alumni:', error.message);
+                alumniGrid.innerHTML = '<p style="text-align: center; color: red;">Error loading alumni.</p>';
+            }
+        }
+
+        function renderAlumni(alumni) {
+            alumniGrid.innerHTML = '';
+            alumni.forEach((alum, index) => {
+                const card = document.createElement('div');
+                card.classList.add('alumni-card');
+                card.style = `--index: ${index}`;
+                card.innerHTML = `
+                    <h3>${alum.name}</h3>
+                    <p><strong>Email:</strong> ${alum.email}</p>
+                    <p><strong>Graduation Year:</strong> ${alum.graduation_year}</p>
+                    <p><strong>Job Title:</strong> ${alum.job_title || 'N/A'}</p>
+                    <p><strong>Company:</strong> ${alum.company || 'N/A'}</p>
+                    <p><strong>LinkedIn:</strong> <a href="${alum.linkedin || '#'}" target="_blank">${alum.linkedin || 'N/A'}</a></p>
+                    <p><strong>Phone:</strong> ${alum.phone || 'N/A'}</p>
+                    <p><strong>Address:</strong> ${alum.address || 'N/A'}</p>
+                `;
+                alumniGrid.appendChild(card);
+            });
+            if (alumni.length === 0) {
+                alumniGrid.innerHTML = '<p style="text-align: center;">No alumni found.</p>';
+            }
+        }
+
+        // Filter by graduation year
+        const filterInput = document.getElementById('graduation-year-filter');
+
+        filterInput.addEventListener('input', (e) => {
+            const year = parseInt(e.target.value);
+            const filteredAlumni = isNaN(year) ? allAlumni : allAlumni.filter(alum => alum.graduation_year === year);
+            renderAlumni(filteredAlumni);
+        });
+
+        // Export to Excel
+        async function exportAlumni() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/export_alumni', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const blob = await response.blob(); // Get the file as a Blob
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'alumni_data.xlsx'; // Default filename, can be dynamic if needed
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+                console.log('Excel file downloaded successfully');
+            } catch (error) {
+                console.error('Export error:', error.message);
+                alert('Error exporting data. Check server connection or contact support.');
+            }
+        }
+
+        // Initial fetch
+        fetchAlumni();
+    </script>
+</body>
+</html>
