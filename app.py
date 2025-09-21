@@ -1,97 +1,87 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 import sqlite3
-import uuid
 import pandas as pd
-from datetime import datetime
-import io
+import os
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)  # frontend-backend connect karne ke liye
 
-# Database setup
+DB_NAME = "alumni.db"
+
+# Database create table
 def init_db():
-    conn = sqlite3.connect('alumni.db')
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS alumni 
-                 (id TEXT PRIMARY KEY, name TEXT, email TEXT, graduation_year INTEGER, 
-                  job_title TEXT, company TEXT, linkedin TEXT, phone TEXT, address TEXT)''')
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(DB_NAME) as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS alumni (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            graduation_year INTEGER,
+            job_title TEXT,
+            company TEXT,
+            linkedin TEXT,
+            phone TEXT,
+            address TEXT
+        )
+        """)
+        conn.commit()
 
 init_db()
 
-# Endpoint to add alumni
-@app.route('/api/alumni', methods=['POST'])
+# Route: Add Alumni (from form page)
+@app.route("/api/add_alumni", methods=["POST"])
 def add_alumni():
-    data = request.get_json()
-    name = data.get('name')
-    email = data.get('email')
-    graduation_year = data.get('graduation_year')
-    job_title = data.get('job_title')
-    company = data.get('company')
-    linkedin = data.get('linkedin')
-    phone = data.get('phone')
-    address = data.get('address')
+    try:
+        data = request.json
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO alumni (name, email, graduation_year, job_title, company, linkedin, phone, address)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                data.get("name"),
+                data.get("email"),
+                data.get("graduation_year"),
+                data.get("job_title"),
+                data.get("company"),
+                data.get("linkedin"),
+                data.get("phone"),
+                data.get("address")
+            ))
+            conn.commit()
+        return jsonify({"message": "Alumni added successfully!"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    if not all([name, email, graduation_year]):
-        return jsonify({'error': 'Name, email, and graduation year are required'}), 400
-
-    conn = sqlite3.connect('alumni.db')
-    c = conn.cursor()
-    c.execute("SELECT email FROM alumni WHERE email = ?", (email,))
-    if c.fetchone():
-        conn.close()
-        return jsonify({'error': 'Email already exists'}), 400
-
-    alum_id = str(uuid.uuid4())
-    c.execute("INSERT INTO alumni (id, name, email, graduation_year, job_title, company, linkedin, phone, address) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-              (alum_id, name, email, graduation_year, job_title or None, company or None, linkedin or None, phone or None, address or None))
-    conn.commit()
-    conn.close()
-    return jsonify({'message': 'Alumni added successfully', 'id': alum_id}), 201
-
-# Endpoint to get all alumni
-@app.route('/api/alumni', methods=['GET'])
+# Route: Get All Alumni (for show page)
+@app.route("/api/alumni", methods=["GET"])
 def get_alumni():
-    conn = sqlite3.connect('alumni.db')
-    c = conn.cursor()
-    c.execute("SELECT * FROM alumni")
-    alumni = c.fetchall()
-    conn.close()
+    try:
+        with sqlite3.connect(DB_NAME) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM alumni ORDER BY graduation_year DESC")
+            rows = cursor.fetchall()
+            alumni = [dict(row) for row in rows]
+        return jsonify(alumni), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    alumni_list = [
-        {
-            'id': row[0], 'name': row[1], 'email': row[2], 'graduation_year': row[3],
-            'job_title': row[4], 'company': row[5], 'linkedin': row[6], 'phone': row[7], 'address': row[8]
-        } for row in alumni
-    ]
-    return jsonify(alumni_list)
-
-# Endpoint to export alumni to Excel
-@app.route('/api/export_alumni', methods=['GET'])
+# Route: Export Alumni to Excel
+@app.route("/api/export_alumni", methods=["GET"])
 def export_alumni():
-    conn = sqlite3.connect('alumni.db')
-    query = "SELECT * FROM alumni"
-    df = pd.read_sql_query(query, conn)
-    conn.close()
+    try:
+        with sqlite3.connect(DB_NAME) as conn:
+            df = pd.read_sql_query("SELECT * FROM alumni", conn)
 
-    # Create an in-memory file
-    output = io.BytesIO()
-    df.to_excel(output, index=False)
-    output.seek(0)
+        filename = "alumni_data.xlsx"
+        df.to_excel(filename, index=False)
 
-    # Generate filename with current date and time
-    current_time = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f'alumni_data_{current_time}.xlsx'
+        return send_file(filename, as_attachment=True)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    # Return file for download
-    return send_file(
-        output,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        as_attachment=True,
-        attachment_filename=filename
-    )
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(debug=True)
